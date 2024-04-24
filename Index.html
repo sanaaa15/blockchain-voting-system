@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Voting System</title>
+  <script src="https://cdn.jsdelivr.net/npm/web3@1.7.3/dist/web3.min.js"></script>
+  <script>
+    let web3;
+    let contract;
+    let accounts;
+
+    async function init() {
+      if (window.ethereum) {
+        web3 = new Web3(window.ethereum);
+        try {
+          await window.ethereum.request({ method: 'eth_requestAccounts' });
+        } catch (error) {
+          console.error('User denied account access');
+        }
+      } else {
+        alert('Please install MetaMask to use this application');
+      }
+
+    const contractABI = [
+      {
+        "anonymous": false,
+        "inputs": [
+          {
+            "indexed": false,
+            "internalType": "address",
+            "name": "voterAddress",
+            "type": "address"
+          },
+          {
+            "indexed": false,
+            "internalType": "string",
+            "name": "candidate",
+            "type": "string"
+          }
+        ],
+        "name": "VoteCast",
+        "type": "event"
+      },
+      {
+        "anonymous": false,
+        "inputs": [
+          {
+            "indexed": false,
+            "internalType": "address",
+            "name": "voterAddress",
+            "type": "address"
+          },
+          {
+            "indexed": false,
+            "internalType": "bytes32",
+            "name": "voterKey",
+            "type": "bytes32"
+          }
+        ],
+        "name": "VoterRegistered",
+        "type": "event"
+      },
+      {
+        "inputs": [
+          {
+            "internalType": "uint256",
+            "name": "",
+            "type": "uint256"
+          }
+        ],
+        "name": "candidates",
+        "outputs": [
+          {
+            "internalType": "string",
+            "name": "name"
+          },
+          {
+            "internalType": "uint256",
+            "name": "voteCount"
+          }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+      },
+      {
+        "inputs": [
+          {
+            "internalType": "address",
+            "name": ""
+          }
+        ],
+        "name": "voters",
+        "outputs": [
+          {
+            "internalType": "bool",
+            "name": "isRegistered"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "voterKey"
+          }
+        ],
+        "stateMutability": "view"
+      },
+      {
+        "inputs": [],
+        "name": "registerVoter",
+        "outputs": [
+          {
+            "internalType": "bytes32",
+            "name": "voterKey"
+          }
+        ],
+        "stateMutability": "nonpayable"
+      },
+      {
+        "inputs": [
+          {
+            "internalType": "string",
+            "name": "name"
+          }
+        ],
+        "name": "addCandidate"
+      },
+      {
+        "inputs": [
+          {
+            "internalType": "bytes32",
+            "name": "voterKey"
+          },
+          {
+            "internalType": "uint256",
+            "name": "candidateIndex"
+          }
+        ],
+        "name": "vote"
+      },
+      {
+        "inputs": [],
+        "name": "getWinningCandidate",
+        "outputs": [
+          {
+            "internalType": "string",
+            "name": ""
+          }
+        ],
+        "stateMutability": "view"
+      }
+    ]; // Replace with your contract ABI
+      const contractAddress = "0xc77913480d326AF1bBE53226De09B96B4D9b9E33";
+      contract = new web3.eth.Contract(contractABI, contractAddress);
+      accounts = await web3.eth.getAccounts();
+    }
+
+    async function registerVoter() {
+      const voterKey = await contract.methods.registerVoter().send({ from: accounts[0] });
+      alert(`Voter registered! Your voter key is: ${voterKey.events.VoterRegistered.returnValues.voterKey}`);
+    }
+
+    async function addCandidate() {
+      const name = prompt('Enter candidate name:');
+      await contract.methods.addCandidate(name).send({ from: accounts[0] });
+      alert('Candidate added!');
+    }
+
+    async function vote() {
+      const voterKey = prompt('Enter your voter key:');
+      const candidateIndex = prompt('Enter candidate index:');
+      await contract.methods.vote(voterKey, candidateIndex).send({ from: accounts[0] });
+      alert('Vote cast!');
+    }
+
+    async function getWinner() {
+      const winningCandidate = await contract.methods.getWinningCandidate().call();
+      alert(`The winning candidate is: ${winningCandidate}`);
+    }
+  </script>
+</head>
+<body onload="init()">
+  <h1>Voting System</h1>
+  <button onclick="registerVoter()">Register Voter</button>
+  <button onclick="addCandidate()">Add Candidate</button>
+  <button onclick="vote()">Vote</button>
+  <button onclick="getWinner()">Get Winning Candidate</button>
+</body>
+</html>
