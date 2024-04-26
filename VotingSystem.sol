@@ -2,62 +2,79 @@
 pragma solidity ^0.8.0;
 
 contract VotingSystem {
-    // Struct to represent a voter
     struct Voter {
+        string name;
+        uint256 age;
+        bool isIndian;
         bool isRegistered;
         bool hasVoted;
-        uint256 votedProposalId;
+        uint256 voterId;
     }
 
-    // Struct to represent a proposal
-    struct Proposal {
-        string description;
+    struct Candidate {
+        string name;
         uint256 voteCount;
     }
 
-    // Mapping to store voters
-    mapping(address => Voter) public voters;
+    mapping(uint256 => Voter) public voters;
+    mapping(uint256 => Candidate) public candidates;
+    uint256 public totalVoters;
+    uint256 public totalCandidates;
 
-    // Array to store proposals
-    Proposal[] public proposals;
+    event VoterRegistered(uint256 voterId, string name);
+    event VoteCast(uint256 voterId, uint256 candidateId);
 
-    // Event to notify when a voter has voted
-    event VoterRegistered(address voterAddress);
-    event Voted(address voterAddress, uint256 proposalId);
+    function registerVoter(string memory _name, uint256 _age, bool _isIndian) public {
+        require(_age >= 18, "Voter must be at least 18 years old.");
+        require(_isIndian, "Voter must be an Indian citizen.");
 
-    // Function to register a voter
-    function registerVoter() public {
-        require(!voters[msg.sender].isRegistered, "Voter is already registered.");
-        voters[msg.sender].isRegistered = true;
-        emit VoterRegistered(msg.sender);
+        voters[totalVoters] = Voter(_name, _age, _isIndian, true, false, totalVoters);
+        emit VoterRegistered(totalVoters, _name);
+        totalVoters++;
     }
 
-    // Function to add a proposal
-    function addProposal(string memory description) public {
-        proposals.push(Proposal(description, 0));
+    function addCandidate(string memory _name) public {
+        candidates[totalCandidates] = Candidate(_name, 0);
+        totalCandidates++;
     }
 
-    // Function to vote for a proposal
-    function vote(uint256 proposalId) public {
-        require(voters[msg.sender].isRegistered, "Only registered voters can vote.");
-        require(!voters[msg.sender].hasVoted, "Voter has already voted.");
-        require(proposalId < proposals.length, "Invalid proposal ID.");
-
-        voters[msg.sender].hasVoted = true;
-        voters[msg.sender].votedProposalId = proposalId;
-        proposals[proposalId].voteCount++;
-
-        emit Voted(msg.sender, proposalId);
+    function getVotersList() public view returns (Voter[] memory) {
+        Voter[] memory voterList = new Voter[](totalVoters);
+        for (uint256 i = 0; i < totalVoters; i++) {
+            voterList[i] = voters[i];
+        }
+        return voterList;
     }
 
-    // Function to get the winning proposal
-    function getWinningProposal() public view returns (uint256 winningProposalId) {
+    function getCandidatesList() public view returns (Candidate[] memory) {
+        Candidate[] memory candidateList = new Candidate[](totalCandidates);
+        for (uint256 i = 0; i < totalCandidates; i++) {
+            candidateList[i] = candidates[i];
+        }
+        return candidateList;
+    }
+
+    function vote(uint256 _voterId, uint256 _candidateId) public {
+        require(voters[_voterId].isRegistered, "Voter is not registered.");
+        require(!voters[_voterId].hasVoted, "Voter has already voted.");
+        require(_candidateId < totalCandidates, "Invalid candidate ID.");
+
+        voters[_voterId].hasVoted = true;
+        candidates[_candidateId].voteCount++;
+        emit VoteCast(_voterId, _candidateId);
+    }
+
+    function getWinner() public view returns (string memory) {
         uint256 maxVotes = 0;
-        for (uint256 i = 0; i < proposals.length; i++) {
-            if (proposals[i].voteCount > maxVotes) {
-                maxVotes = proposals[i].voteCount;
-                winningProposalId = i;
+        uint256 winnerIndex = 0;
+
+        for (uint256 i = 0; i < totalCandidates; i++) {
+            if (candidates[i].voteCount > maxVotes) {
+                maxVotes = candidates[i].voteCount;
+                winnerIndex = i;
             }
         }
+
+        return candidates[winnerIndex].name;
     }
 }
