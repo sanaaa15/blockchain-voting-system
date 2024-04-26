@@ -1,185 +1,527 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-  <title>Voting System</title>
-  <script src="https://cdn.jsdelivr.net/npm/web3@1.7.3/dist/web3.min.js"></script>
-  <script>
-    let web3;
-    let contract;
-    let accounts;
-
-    async function init() {
-      if (window.ethereum) {
-        web3 = new Web3(window.ethereum);
-        try {
-          await window.ethereum.request({ method: 'eth_requestAccounts' });
-        } catch (error) {
-          console.error('User denied account access');
+    <meta charset="UTF-8">
+    <title>Voting System</title>
+    <script src="https://cdn.jsdelivr.net/npm/web3/dist/web3.min.js"></script>
+    <style>
+        /* General Styling */
+        body {
+            background-color: #f0f8ff; /* Light blue background */
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
         }
-      } else {
-        alert('Please install MetaMask to use this application');
-      }
 
-    const contractABI = [
-      {
-        "anonymous": false,
-        "inputs": [
-          {
-            "indexed": false,
-            "internalType": "address",
-            "name": "voterAddress",
-            "type": "address"
-          },
-          {
-            "indexed": false,
-            "internalType": "string",
-            "name": "candidate",
-            "type": "string"
-          }
-        ],
-        "name": "VoteCast",
-        "type": "event"
-      },
-      {
-        "anonymous": false,
-        "inputs": [
-          {
-            "indexed": false,
-            "internalType": "address",
-            "name": "voterAddress",
-            "type": "address"
-          },
-          {
-            "indexed": false,
-            "internalType": "bytes32",
-            "name": "voterKey",
-            "type": "bytes32"
-          }
-        ],
-        "name": "VoterRegistered",
-        "type": "event"
-      },
-      {
-        "inputs": [
-          {
-            "internalType": "uint256",
-            "name": "",
-            "type": "uint256"
-          }
-        ],
-        "name": "candidates",
-        "outputs": [
-          {
-            "internalType": "string",
-            "name": "name"
-          },
-          {
-            "internalType": "uint256",
-            "name": "voteCount"
-          }
-        ],
-        "stateMutability": "view",
-        "type": "function"
-      },
-      {
-        "inputs": [
-          {
-            "internalType": "address",
-            "name": ""
-          }
-        ],
-        "name": "voters",
-        "outputs": [
-          {
-            "internalType": "bool",
-            "name": "isRegistered"
-          },
-          {
-            "internalType": "bytes32",
-            "name": "voterKey"
-          }
-        ],
-        "stateMutability": "view"
-      },
-      {
-        "inputs": [],
-        "name": "registerVoter",
-        "outputs": [
-          {
-            "internalType": "bytes32",
-            "name": "voterKey"
-          }
-        ],
-        "stateMutability": "nonpayable"
-      },
-      {
-        "inputs": [
-          {
-            "internalType": "string",
-            "name": "name"
-          }
-        ],
-        "name": "addCandidate"
-      },
-      {
-        "inputs": [
-          {
-            "internalType": "bytes32",
-            "name": "voterKey"
-          },
-          {
-            "internalType": "uint256",
-            "name": "candidateIndex"
-          }
-        ],
-        "name": "vote"
-      },
-      {
-        "inputs": [],
-        "name": "getWinningCandidate",
-        "outputs": [
-          {
-            "internalType": "string",
-            "name": ""
-          }
-        ],
-        "stateMutability": "view"
-      }
-    ]; // Replace with your contract ABI
-      const contractAddress = "0xc77913480d326AF1bBE53226De09B96B4D9b9E33";
-      contract = new web3.eth.Contract(contractABI, contractAddress);
-      accounts = await web3.eth.getAccounts();
-    }
+        .container {
+            max-width: 700px;
+            margin: 40px auto;
+            padding: 20px;
+            border: 1px solid #e0e0e0;
+            border-radius: 10px;
+            background-color: #ffffff;
+            box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1); /* Soft shadow */
+        }
 
-    async function registerVoter() {
-      const voterKey = await contract.methods.registerVoter().send({ from: accounts[0] });
-      alert(`Voter registered! Your voter key is: ${voterKey.events.VoterRegistered.returnValues.voterKey}`);
-    }
+        h2 {
+            text-align: center;
+            color: #2a52be; /* Dark blue */
+        }
 
-    async function addCandidate() {
-      const name = prompt('Enter candidate name:');
-      await contract.methods.addCandidate(name).send({ from: accounts[0] });
-      alert('Candidate added!');
-    }
+        h3 {
+            color: #333;
+            margin-bottom: 10px;
+        }
 
-    async function vote() {
-      const voterKey = prompt('Enter your voter key:');
-      const candidateIndex = prompt('Enter candidate index:');
-      await contract.methods.vote(voterKey, candidateIndex).send({ from: accounts[0] });
-      alert('Vote cast!');
-    }
+        form {
+            display: flex;
+            flex-direction: column;
+        }
 
-    async function getWinner() {
-      const winningCandidate = await contract.methods.getWinningCandidate().call();
-      alert(`The winning candidate is: ${winningCandidate}`);
-    }
-  </script>
+        .form-inline {
+            display: flex;
+            align-items: center;
+        }
+
+        input {
+            padding: 10px;
+            margin: 5px 0;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            font-size: 14px;
+        }
+
+        input[type="checkbox"] {
+            margin-right:10px; /* Space between checkbox and label */
+            margin-left: 10px;
+        }
+
+        button {
+            padding: 10px;
+            background-color: #2a52be; /* Dark blue */
+            color: #ffffff;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        button:hover {
+            background-color: #1c3a83; /* Darker blue on hover */
+        }
+
+        /* Lists of voters and candidates */
+        .list {
+            margin-top: 20px;
+            border-top: 1px solid #ddd;
+            padding-top: 10px;
+        }
+
+        .list-item {
+            border-bottom: 1px solid #ddd;
+            padding: 5px 0;
+        }
+
+        /* Improved styling for the dropdown */
+        select {
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            font-size: 14px;
+            margin-right: 10px; /* Space between select and button */
+            margin-bottom: 10px;
+        }
+
+        /* Extra space for winner display */
+        #winner {
+            margin-top: 10px;
+            font-weight: bold;
+        }
+        label{
+            margin-bottom: 10px;
+        }
+    </style>
+
 </head>
-<body onload="init()">
-  <h1>Voting System</h1>
-  <button onclick="registerVoter()">Register Voter</button>
-  <button onclick="addCandidate()">Add Candidate</button>
-  <button onclick="vote()">Vote</button>
-  <button onclick="getWinner()">Get Winning Candidate</button>
+<body>
+    <div class="container">
+        <h2>Voting System</h2>
+
+        <h3>Register Voter</h3>
+        <form id="register-voter-form">
+            <input type="text" placeholder="Name" name="name" required>
+            <input type="number" placeholder="Age" name="age" min="18" required>
+            <label>
+                <input type="checkbox" name="isIndian" required> Is Indian?
+            </label>
+            <button type="submit">Register</button>
+        </form>
+
+        <h3>Add Candidate</h3>
+        <form id="add-candidate-form">
+            <input type="text" placeholder="Candidate Name" name="name" required>
+            <button type="submit">Add</button>
+        </form>
+
+        <h3>Vote</h3>
+        <form id="vote-form">
+            <input type="number" placeholder="Voter ID" name="voterId" required>
+            <select id="candidate-select" name="candidateId" required>
+                <!-- Candidates will be added here -->
+            </select>
+            <button type="submit">Vote</button>
+        </form>
+
+        <h3>Candidates List</h3>
+        <div class="list" id="candidates-list">
+            <!-- Candidates will be listed here -->
+        </div>
+
+        <h3>Winner</h3>
+        <button id="get-winner-btn">Get Winner</button>
+        <div id="winner"></div>
+    </div>
+    </div>
+
+    <script>
+        const contractAddress = '0x319d984915301CCbc7F93764E83D2291DBFb78aE';
+        const contractABI = [
+	{
+		"inputs": [
+			{
+				"internalType": "string",
+				"name": "_name",
+				"type": "string"
+			}
+		],
+		"name": "addCandidate",
+		"outputs": [],
+		"stateMutability": "nonpayable",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "string",
+				"name": "_name",
+				"type": "string"
+			},
+			{
+				"internalType": "uint256",
+				"name": "_age",
+				"type": "uint256"
+			},
+			{
+				"internalType": "bool",
+				"name": "_isIndian",
+				"type": "bool"
+			}
+		],
+		"name": "registerVoter",
+		"outputs": [],
+		"stateMutability": "nonpayable",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "uint256",
+				"name": "_voterId",
+				"type": "uint256"
+			},
+			{
+				"internalType": "uint256",
+				"name": "_candidateId",
+				"type": "uint256"
+			}
+		],
+		"name": "vote",
+		"outputs": [],
+		"stateMutability": "nonpayable",
+		"type": "function"
+	},
+	{
+		"anonymous": false,
+		"inputs": [
+			{
+				"indexed": false,
+				"internalType": "uint256",
+				"name": "voterId",
+				"type": "uint256"
+			},
+			{
+				"indexed": false,
+				"internalType": "uint256",
+				"name": "candidateId",
+				"type": "uint256"
+			}
+		],
+		"name": "VoteCast",
+		"type": "event"
+	},
+	{
+		"anonymous": false,
+		"inputs": [
+			{
+				"indexed": false,
+				"internalType": "uint256",
+				"name": "voterId",
+				"type": "uint256"
+			},
+			{
+				"indexed": false,
+				"internalType": "string",
+				"name": "name",
+				"type": "string"
+			}
+		],
+		"name": "VoterRegistered",
+		"type": "event"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "uint256",
+				"name": "",
+				"type": "uint256"
+			}
+		],
+		"name": "candidates",
+		"outputs": [
+			{
+				"internalType": "string",
+				"name": "name",
+				"type": "string"
+			},
+			{
+				"internalType": "uint256",
+				"name": "voteCount",
+				"type": "uint256"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [],
+		"name": "getCandidatesList",
+		"outputs": [
+			{
+				"components": [
+					{
+						"internalType": "string",
+						"name": "name",
+						"type": "string"
+					},
+					{
+						"internalType": "uint256",
+						"name": "voteCount",
+						"type": "uint256"
+					}
+				],
+				"internalType": "struct VotingSystem.Candidate[]",
+				"name": "",
+				"type": "tuple[]"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [],
+		"name": "getVotersList",
+		"outputs": [
+			{
+				"components": [
+					{
+						"internalType": "string",
+						"name": "name",
+						"type": "string"
+					},
+					{
+						"internalType": "uint256",
+						"name": "age",
+						"type": "uint256"
+					},
+					{
+						"internalType": "bool",
+						"name": "isIndian",
+						"type": "bool"
+					},
+					{
+						"internalType": "bool",
+						"name": "isRegistered",
+						"type": "bool"
+					},
+					{
+						"internalType": "bool",
+						"name": "hasVoted",
+						"type": "bool"
+					},
+					{
+						"internalType": "uint256",
+						"name": "voterId",
+						"type": "uint256"
+					}
+				],
+				"internalType": "struct VotingSystem.Voter[]",
+				"name": "",
+				"type": "tuple[]"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [],
+		"name": "getWinner",
+		"outputs": [
+			{
+				"internalType": "string",
+				"name": "",
+				"type": "string"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [],
+		"name": "totalCandidates",
+		"outputs": [
+			{
+				"internalType": "uint256",
+				"name": "",
+				"type": "uint256"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [],
+		"name": "totalVoters",
+		"outputs": [
+			{
+				"internalType": "uint256",
+				"name": "",
+				"type": "uint256"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "uint256",
+				"name": "",
+				"type": "uint256"
+			}
+		],
+		"name": "voters",
+		"outputs": [
+			{
+				"internalType": "string",
+				"name": "name",
+				"type": "string"
+			},
+			{
+				"internalType": "uint256",
+				"name": "age",
+				"type": "uint256"
+			},
+			{
+				"internalType": "bool",
+				"name": "isIndian",
+				"type": "bool"
+			},
+			{
+				"internalType": "bool",
+				"name": "isRegistered",
+				"type": "bool"
+			},
+			{
+				"internalType": "bool",
+				"name": "hasVoted",
+				"type": "bool"
+			},
+			{
+				"internalType": "uint256",
+				"name": "voterId",
+				"type": "uint256"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	}
+];
+
+        let web3;
+        let contract;
+
+        // Initialize Web3 and contract
+        function initializeWeb3() {
+            if (window.ethereum) {
+                web3 = new Web3(window.ethereum);
+                try {
+                    window.ethereum.request({ method: 'eth_requestAccounts' });
+                } catch (error) {
+                    console.error("User denied account access");
+                }
+            } else {
+                console.error("Please install MetaMask");
+            }
+
+            contract = new web3.eth.Contract(contractABI, contractAddress);
+        }
+
+        document.addEventListener("DOMContentLoaded", initializeWeb3);
+
+        // Register Voter
+        document.getElementById("register-voter-form").addEventListener("submit", async function (event) {
+            event.preventDefault();
+            const form = event.target;
+            const name = form.elements["name"].value;
+            const age = parseInt(form.elements["age"].value);
+            const isIndian = form.elements["isIndian"].checked;
+            const accounts = await web3.eth.getAccounts();
+
+            const voterId = await contract.methods.registerVoter(name, age, isIndian).send({ from: accounts[0] });
+            alert(`Voter registered successfully with Voter ID: ${voterId.events.VoterRegistered.returnValues.voterId}`);
+        });
+
+        // Add Candidate
+        document.getElementById("add-candidate-form").addEventListener("submit", async function (event) {
+            event.preventDefault();
+            const form = event.target;
+            const name = form.elements["name"].value;
+            const accounts = await web3.eth.getAccounts();
+
+            await contract.methods.addCandidate(name).send({ from: accounts[0] });
+            alert("Candidate added successfully");
+            loadCandidates();
+        });
+
+        // Cast Vote
+        document.getElementById("vote-form").addEventListener("submit", async function (event) {
+            event.preventDefault();
+            const form = event.target;
+            const voterId = parseInt(form.elements["voterId"].value);
+            const candidateId = parseInt(form.elements["candidateId"].value);
+            const accounts = await web3.eth.getAccounts();
+
+            await contract.methods.vote(voterId, candidateId).send({ from: accounts[0] });
+            alert("Vote cast successfully");
+            loadCandidates();
+        });
+
+        // Load Candidates
+        async function loadCandidates() {
+            const candidatesList = await contract.methods.getCandidatesList().call();
+            const candidatesDiv = document.getElementById("candidates-list");
+            const candidateSelect = document.getElementById("candidate-select");
+            candidatesDiv.innerHTML = ""; // Clear existing content
+            candidateSelect.innerHTML = ""; // Clear existing options
+
+            candidatesList.forEach((candidate, index) => {
+                const candidateItem = document.createElement("p");
+                candidateItem.textContent = `${candidate.name} - ${candidate.voteCount} votes (Candidate ID: ${index})`;
+                candidatesDiv.appendChild(candidateItem);
+
+                const option = document.createElement("option");
+                option.value = index;
+                option.text = `${candidate.name} (ID: ${index})`;
+                candidateSelect.add(option);
+            });
+        }
+
+        // Get Winner
+        async function getWinner() {
+            const candidatesList = await contract.methods.getCandidatesList().call();
+            let maxVotes = 0;
+            let winnerIndex = -1;
+
+            for (let i = 0; i < candidatesList.length; i++) {
+                if (candidatesList[i].voteCount > maxVotes) {
+                    maxVotes = candidatesList[i].voteCount;
+                    winnerIndex = i;
+                }
+            }
+
+            if (winnerIndex !== -1) {
+                const winnerDiv = document.getElementById("winner");
+                winnerDiv.textContent = `Winner: ${candidatesList[winnerIndex].name}`;
+            } else {
+                alert("No votes have been cast yet.");
+            }
+        }
+
+        document.getElementById("get-winner-btn").addEventListener("click", getWinner);
+
+        document.addEventListener("DOMContentLoaded", function () {
+            loadCandidates();
+        });
+    </script>
 </body>
 </html>
