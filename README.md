@@ -72,5 +72,3 @@ This is a simple blockchain-based voting system with a frontend built using HTML
 - If the frontend does not interact with the contract, double-check the contract address and ABI to ensure they are correct.
 - If deploying on a testnet, ensure the network has sufficient block confirmations before interacting with the contract.
 
-## License
-This project is licensed under the MIT License. See the LICENSE file for more details.
